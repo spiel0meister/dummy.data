@@ -3,11 +3,21 @@
 
 char password_buf[1024] = {0};
 
+void begin_header(FILE* sink, const char* guard_name) {
+    fprintf(sink, "#ifndef %s\n", guard_name);
+    fprintf(sink, "#define %s\n", guard_name);
+}
+
+void end_header(FILE* sink, const char* guard_name) {
+    fprintf(sink, "#endif // %s\n", guard_name);
+}
+
 int main(void) {
+    const char* guard = "MOST_COMMON_PASSWORDS_H_";
+
     FILE* password_file = fopen("10000_most_common_passwords.txt", "rb");
     size_t password_count = 0;
-    printf("#ifndef MOST_COMMON_PASSWORDS_H_\n");
-    printf("#define MOST_COMMON_PASSWORDS_H_\n\n");
+    begin_header(stdout, guard);
     printf("const char* passwords[] = {\n");
     while (fgets(password_buf, 1024, password_file) != NULL) {
         *strchr(password_buf, '\n') = 0;
@@ -19,7 +29,8 @@ int main(void) {
     }
     printf("};\n");
     printf("#define PASSOWORDS_LEN (sizeof(passwords)/sizeof(passwords[0]))\n\n");
-    printf("#endif // MOST_COMMON_PASSWORDS_H_");
+    end_header(stdout, guard);
+
     fclose(password_file);
     return 0;
 }
