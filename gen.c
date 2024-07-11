@@ -5,7 +5,7 @@ char password_buf[1024] = {0};
 
 void begin_header(FILE* sink, const char* guard_name) {
     fprintf(sink, "#ifndef %s\n", guard_name);
-    fprintf(sink, "#define %s\n", guard_name);
+    fprintf(sink, "#define %s\n\n", guard_name);
 }
 
 void end_header(FILE* sink, const char* guard_name) {
