@@ -28,7 +28,7 @@ int main(void) {
         word_count++;
     }
     printf("};\n");
-    printf("#define EN_WORDS_LEN (sizeof(words)/sizeof(words[0]))\n\n");
+    printf("#define EN_WORDS_LEN (sizeof(en_words)/sizeof(en_words[0]))\n\n");
     end_header(stdout, guard);
 
     fclose(f);
