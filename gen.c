@@ -24,13 +24,13 @@ void end_header(FILE* sink, const char* guard_name) {
 
 static char item[1024] = {0};
 bool generate(ToGenerate gen, size_t items_per_line) {
-    FILE* header = fopen(gen.header_path, "wb");
+    FILE* header = fopen(gen.header_path, "w");
     if (header == NULL) {
         fprintf(stderr, "Couldn't open %s: %s\n", gen.header_path, strerror(errno));
         return false;
     }
 
-    FILE* json = fopen(gen.json_path, "wb");
+    FILE* json = fopen(gen.json_path, "w");
     if (json == NULL) {
         fprintf(stderr, "Couldn't open %s: %s\n", gen.header_path, strerror(errno));
         return false;
