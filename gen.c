@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <assert.h>
 #include <errno.h>
+
+// For some reason it's not in string.h
+char* strdup(const char* s);
 
 typedef struct {
     const char* txt_path;
@@ -20,6 +24,52 @@ void begin_header(FILE* sink, const char* guard_name) {
 
 void end_header(FILE* sink, const char* guard_name) {
     fprintf(sink, "#endif // %s\n", guard_name);
+}
+
+#define TMP_BUF_SIZE (1 << 12)
+char tmp_buf[TMP_BUF_SIZE] = {0};
+size_t tmp_buf_size = 0;
+
+char* tmp_end() {
+    return tmp_buf + tmp_buf_size;
+}
+
+char* tmp_alloc(size_t size) {
+    assert(tmp_buf_size + size < TMP_BUF_SIZE);
+
+    char* s = tmp_end();
+    tmp_buf_size += size;
+
+    return s;
+}
+
+char* tmp_strdup(const char* s) {
+    int n = strlen(s);
+    char* copy = tmp_alloc(n + 1);
+    memcpy(copy, s, n + 1);
+    return copy;
+}
+
+#define tmp_reset() tmp_buf_size = 0
+
+ToGenerate create_to_gen(const char* txt_path, const char* guard, const char* arr_name, const char* arr_len_name) {
+    char* dot = strchr(txt_path, '.');
+    assert(dot != NULL);
+
+    char header_path[1024] = {0};
+    sprintf(header_path, "%.*s.h", (int)(dot - txt_path), txt_path);
+
+    char json_path[1024] = {0};
+    sprintf(json_path, "%.*s.json", (int)(dot - txt_path), txt_path);
+
+    return (ToGenerate) {
+        .txt_path = txt_path,
+        .header_path = tmp_strdup(header_path),
+        .json_path = tmp_strdup(json_path),
+        .guard = guard,
+        .arr_var_name = arr_name,
+        .arr_len_var_name = arr_len_name
+    };
 }
 
 static char item[1024] = {0};
@@ -76,38 +126,11 @@ bool generate(ToGenerate gen, size_t items_per_line) {
 
 int main(void) {
     ToGenerate gens[] = {
-        (ToGenerate) {
-            .txt_path = "most_common_english_words.txt",
-            .header_path = "most_common_english_words.h",
-            .json_path = "most_common_english_words.json",
-            .guard = "MOST_COMMON_ENGLISH_WORDS_H_",
-            .arr_var_name = "en_words",
-            .arr_len_var_name = "en_words_len"
-        },
-        (ToGenerate) {
-            .txt_path = "10000_most_common_passwords.txt",
-            .header_path = "10000_most_common_passwords.h",
-            .json_path = "10000_most_common_passwords.json",
-            .guard = "MOST_COMMON_PASSWORDS_H_",
-            .arr_var_name = "passwords",
-            .arr_len_var_name = "passwords_len"
-        },
-        (ToGenerate) {
-            .txt_path = "100_most_common_names_for_each_gender.txt",
-            .header_path = "100_most_common_names_for_each_gender.h",
-            .json_path = "100_most_common_names_for_each_gender.json",
-            .guard = "MOST_COMMON_NAMES_H_",
-            .arr_var_name = "names",
-            .arr_len_var_name = "names_len"
-        },
-        (ToGenerate) {
-            .txt_path = "fruits.txt",
-            .header_path = "fruits.h",
-            .json_path = "fruits.json",
-            .guard = "FRUITS_H_",
-            .arr_var_name = "fruits",
-            .arr_len_var_name = "fruits_len"
-        },
+        create_to_gen("most_common_english_words.txt", "MOST_COMMON_ENGLISH_WORDS_H_", "en_words", "en_words_len"),
+        create_to_gen("10000_most_common_passwords.txt", "MOST_COMMON_PASSWORDS_H_", "passwords", "passwords_len"),
+        create_to_gen("100_most_common_names_for_each_gender.txt", "MOST_COMMON_NAMES_H_", "names", "names_len"),
+        create_to_gen("fruits.txt", "FRUITS_H_", "fruits", "fruits_len"),
+        create_to_gen("vegetables.txt", "VEGETABLES_H_", "vegetables", "vegetables_len"),
     };
 
     for (size_t i = 0; i < sizeof(gens)/sizeof(gens[0]); ++i) {
