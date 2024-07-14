@@ -100,6 +100,14 @@ int main(void) {
             .arr_var_name = "names",
             .arr_len_var_name = "names_len"
         },
+        (ToGenerate) {
+            .txt_path = "fruits.txt",
+            .header_path = "fruits.h",
+            .json_path = "fruits.json",
+            .guard = "FRUITS_H_",
+            .arr_var_name = "fruits",
+            .arr_len_var_name = "fruits_len"
+        },
     };
 
     for (size_t i = 0; i < sizeof(gens)/sizeof(gens[0]); ++i) {
